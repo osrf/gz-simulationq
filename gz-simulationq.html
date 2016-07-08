@@ -1,0 +1,272 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id='gz-simulationq'>
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #config {
+        max-width:40em;
+        font-size:"0.8em"
+      }
+
+      #config > div{
+        padding-top:1em;
+      }
+
+      #config > div > input{
+        float:right;
+      }
+
+      #gui > div > div > input{
+        float:right;
+      }
+
+      #gui > div > div {
+        padding-top:0.5em;
+      }
+
+      th{
+        background-color:#ccc
+      }
+
+      span {
+        @apply(--paper-font-body1);
+      }
+    </style>
+
+    <iron-ajax
+      id="ajax"
+      url=""
+      handle-as="json"
+      on-response="hresponse"
+      on-error="herror"
+      headers="headers"
+      debounce-duration="300">
+    </iron-ajax>
+
+    <div id="config">
+
+      <div><h4>{{caption}}</h4></div>
+
+      <div>
+        Sim server URL:<input id=url value="{{url::input}}"></input>
+      </div>
+      <div>
+        User token:<input id=token value="{{token::input}}"></input>
+      </div>
+     </div> <!-- /config -->
+
+      <div id="gui">
+
+        <div><h1>{{title}}</h1></div>
+        <div id="feedback" style="display:none">
+          <span id="feedback_text"/>
+        </div>
+
+        <div>
+          <h2>Add simulation</h2>
+          <div>
+            Command:<input id=cmdLine value="{{cmd::input}}">
+                     </input>
+            <div>
+              <button on-tap="tapCreate"  id="buttonCreate">Create</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2>Edit an existing simulation</h2>
+          <div>
+            Simulation ID:<input id=simId value="{{simId::input}}"></input>
+          </div>
+          <div>
+            cmd line:<input id=worldFile value="{{worldFile::input}}"></input>
+          </div>
+          <div>
+            <button on-tap="tapEdit" id="buttonEdit">Update</button>
+          </div>
+
+          <h2>Remove an existing simulation</h2>
+          <div>
+            Simulation ID:<input id=simId value="{{simId::input}}"></input>
+          </div>
+          <div>
+            <button on-tap="tapRemove" id="buttonRemove">Delete
+            </button>
+          </div>
+
+        </div>
+
+        <div>
+          <h2>Simulations</h2>
+          <button on-tap="tapGet" id="buttonGetSimulations">
+            Get simulations
+          </button>
+          <div>
+            <table id="listTable" style="display:none" border="0">
+              <tr>
+                 <td><h1>Machines</h1></td>
+              </tr>
+
+              <template is="dom-repeat" items="{{items}}">
+                <tr>
+                  <td>
+                  <table>
+                    <tr>
+                       <th>id</th>
+                       <th>cmd</th>
+                       <th>permissions</th>
+                       <th>stuff</th>
+                    </tr>
+                    <tr>
+                       <td>{{item.id}}</td>
+                       <td>{{item.data.cmd}}</td>
+                       <td>{{item.permissions}}</td>
+                       <td>
+
+                         <button on-tap="tapRemove" id="buttonRemove">
+                           Remove from queue
+                         </button>
+
+                       </td>
+                    </tr>
+                  </table>
+                  <br><br>
+                  </td>
+                </tr>
+              </template>
+            </table>
+          </div>
+      </div>  <!-- /gui -->
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'gz-simulationq',
+
+        // Triggered when the "gui" property is changed
+        _guiChanged: function(newValue, oldValue) {
+          this.$.gui.style.display = newValue ? '' : 'none'
+        },
+        // Triggered when the "config" property is changed
+        _configChanged: function(newValue, oldValue) {
+          this.$.config.style.display = newValue ? '' : 'none'
+        },
+
+        createSimulation: function(cmdLine) {
+          const data = {token: this.token, cmd: this.cmd }
+          this.$.ajax.params = data
+          this.$.ajax.method = "POST"
+          this.$.ajax.url = this.url + '/simulations'
+          this.$.ajax.generateRequest()
+        },
+        tapCreate: function() {
+          this.createSimulation(this.cmd)
+        },
+        tapGet: function() {
+          this.$.listTable.style.display = 'none'
+          this.$.feedback.style.display = ''
+          this.$.feedback.style.color = 'blue'
+          this.$.feedback_text.textContent = "Asking the server."
+          this.$.ajax.method = "GET"
+          this.$.ajax.url = this.url + '/simulations'
+          const data = { token: this.token}
+          this.$.ajax.params = data;
+          this.$.ajax.generateRequest()
+        },
+
+        hresponse: function(req) {
+          let res = this.$.ajax.lastResponse
+
+          this.items = []
+          if(res.result)
+            this.items = res.result
+
+          console.log('hresponse',res)
+
+          this.$.feedback.style.display = ''
+          this.$.listTable.style.display = 'none'
+
+          if (!res.success)
+          {
+            this.$.feedback.style.color = 'red'
+            this.$.feedback_text.textContent = JSON.stringify(res.error)
+          }
+          else if (res.result.length == 0)
+          {
+            this.$.feedback.style.color = 'blue'
+            this.$.feedback_text.textContent = "There are no simulations for this user."
+          }
+          else
+          {
+            this.$.feedback.style.color = 'blue'
+            this.$.feedback_text.textContent = "See list of simulations below."
+            this.$.listTable.style.display = ''
+          }
+        },
+
+        herror: function(err) {
+          this.$.feedback.style.display = ''
+          this.$.listTable.style.display = 'none'
+          this.$.feedback.style.color = 'red'
+          this.$.feedback_text.textContent = "Something went wrong. Is the server URL correct?"
+        },
+
+        properties: {
+          items: {
+            type: Array,
+            notify: true
+          },
+          title: {
+            type: String,
+            value: 'gz-simulationq title',
+            notify: true
+          },
+          caption: {
+            type: String,
+            value: 'Manage the simulation queue in a cloudsim-sim server.\
+ create read update delete simulation information',
+            notify: true
+          },
+          url: {
+            type: String,
+            value: 'https://localhost:4000',
+            notify: true
+          },
+          token: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          cmd: {
+            type: String,
+            value: 'gzserver --verbose',
+            notify: true
+          },
+          gui: {
+            type: Boolean,
+            value: false,
+            observer: '_guiChanged'
+          },
+          config: {
+            type: Boolean,
+            value: false,
+            observer: '_configChanged'
+          }
+        },
+
+        ready: function() {
+          console.log('gz-simulationq ready')
+          this.items = [];
+        }
+      });
+    })();
+  </script>
+</dom-module>
