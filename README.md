@@ -1,6 +1,8 @@
 # \<gz-simulationq\>
 
-[documentation](https://osrf.github.io/gz-simulation/components/gz-simulationq)
+[documentation](https://osrf.github.io/gz-simulationq/components/gz-simulationq)
+
+Manages simulation runs on a CloudSim simulation server
 
 ## Install the Polymer-CLI
 
