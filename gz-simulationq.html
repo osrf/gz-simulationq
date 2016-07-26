@@ -20,12 +20,12 @@
       #config > div > input{
         float:right;
       }
-
-      #gui > div > div > input{
+/*
+      #gui > div > input{
         float:right;
       }
-
-      #gui > div > div {
+*/
+      #gui  > div {
         padding-top:0.5em;
       }
 
@@ -51,12 +51,13 @@
 
     <iron-ajax
       id="ajaxCreate"
-      url=""
+      url='[[url]]/simulations'
       handle-as='json'
       on-response='_hresponseCreate'
       on-error='_herrorCreate'
       debounce-duration="300"
-      method='POST'>
+      method='POST'
+      >
     </iron-ajax>
 
     <iron-ajax
@@ -81,69 +82,56 @@
 
 
       <div>
-        Sim server (url):<input id=url value="{{url::input}}"></input>
+        Sim server (url):<input id=url value="{{url::input}}" placeholder="Sim server (url)"></input>
       </div>
       <div>
-        User (token):<input id=token value="{{token::input}}"></input>
+        User (token):<input id=token value="{{token::input}}" placeholder="token"></input>
       </div>
      </div> <!-- /config -->
 
       <div id="gui" hidden$=[[!gui]]>
 
-        <div><h1>{{title}}</h1></div>
-        <div id="feedback" style="display:none">
-          <span id="feedback_text"/>
-        </div>
-
       <h2>Create a new simulation</h2>
       <div>
-        cmd (command):<input id=cmdLine value="{{cmd::input}}"></input>
+        <input id=cmdLine value="{{cmd::input}}" placeholder="cmd (command)"></input>
       </div>
       <div>
         <button on-tap="_tapCreate"  id="buttonCreate">Create</button>
       </div>
 
+
       <h2>Remove an existing simulation</h2>
       <div>
-        Simulation ID:<input id=simId value="{{simId::input}}"></input>
+        <input id=simId value="{{simId::input}}" placeholder="Simulation ID"></input>
       </div>
       <div>
         <button on-tap="tapRemove" id="buttonRemove">Delete</button>
       </div>
 
-        <div>
-          <h2>Edit an existing simulation</h2>
-          <div>
-            Simulation ID:<input id=simId value="{{simId::input}}"></input>
-          </div>
-          <div>
-            cmd line:<input id=worldFile value="{{worldFile::input}}"></input>
-          </div>
-          <div>
-            <button on-tap="tapEdit" id="buttonEdit">Update</button>
-          </div>
-        </div>
+      <h2>Edit an existing simulation</h2>
+      <div>
+        <input id=simId value="{{simId::input}}" placeholder="https://localhost:6060"></input>
+      </div>
+      <div>
+        <input id=worldFile value="{{worldFile::input}}" placeholder="cmd line"></input>
+      </div>
+      <div>
+        <button on-tap="tapEdit" id="buttonEdit">Update</button>
+      </div>
 
-        <div>
-          <h2>Simulation list </h2>
-          <button on-tap="_tapGet" id="buttonGetSimulations">
-            Get simulations
-          </button>
-          <div>
-            <table id="listTable" style="display:none" border="0">
-              <tr>
-                 <td><h1>Machines</h1></td>
-              </tr>
+      <h2>Simulation list </h2>
+      <button on-tap="_tapGet" id="buttonGetSimulations">
+        Get simulations
+      </button>
+      <div>
+          <h2>Machines</h2>
+          <template is="dom-repeat" items="{{items}}">
+            <br>-------------------------
+                 <div>id {{item.id}}</div>
+                 <div>cmd {{item.data.cmd}}</div>
+                 <div>perms {{item.permissions}}</div>
 
-              <template is="dom-repeat" items="{{items}}">
-                <br>-------------------------
-                     <div>id {{item.id}}</div>
-                     <div>cmd {{item.data.cmd}}</div>
-                     <div>perms {{item.permissions}}</div>
-
-              </template>
-            </table>
-          </div>
+          </template>
       </div>
     </div><!-- /gui -->
   </template>
@@ -165,10 +153,12 @@
         },
 
         createSimulation: function(cmdLine) {
-          const data = {token: this.token, cmd: this.cmd}
+//        const data = {token: this.token, cmd: this.cmd}
+          const data = {cmd: this.cmd}
           this.$.ajaxCreate.params = data
-          this.$.ajaxCreate.method = "POST"
-          this.$.ajaxCreate.url = __buildUrl(this.url, '/simulations')
+//          this.$.ajaxCreate.method = "POST"
+//          this.$.ajaxCreate.url = __buildUrl(this.url, '/simulations')
+          this.$.ajaxCreate.headers.authorization = this.token
           this.$.ajaxCreate.generateRequest()
         },
 
@@ -266,7 +256,7 @@
 
           cmd: {
             type: String,
-            value: 'gzserver --verbose',
+            value: '',
             notify: true
           },
 
