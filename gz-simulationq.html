@@ -40,23 +40,22 @@
 
     <iron-ajax
       id="ajaxItems"
-      url=""
+      method='GET'
+      url='[[url]]/simulations'
       handle-as="json"
       on-response="_hresponseItems"
       on-error="_herrorItems"
-      headers="headers"
       debounce-duration="300"
-      method='GET'>
-    </iron-ajax>
+    ></iron-ajax>
 
     <iron-ajax
       id="ajaxCreate"
+      method='POST'
       url='[[url]]/simulations'
       handle-as='json'
       on-response='_hresponseCreate'
       on-error='_herrorCreate'
       debounce-duration="300"
-      method='POST'
       >
     </iron-ajax>
 
@@ -72,6 +71,7 @@
     <iron-ajax
       id="ajaxDelete"
       url=""
+      method="DELETE"
       handle-as="json"
       on-response="_hresponseDelete"
       on-error="_herrorDelete"
@@ -99,28 +99,27 @@
         <button on-tap="_tapCreate"  id="buttonCreate">Create</button>
       </div>
 
-
-      <h2>Remove an existing simulation</h2>
+      <h2>Delete an existing simulation</h2>
       <div>
         <input id=simId value="{{simId::input}}" placeholder="Simulation ID"></input>
       </div>
       <div>
-        <button on-tap="tapRemove" id="buttonRemove">Delete</button>
+        <button on-tap="_tapDelete" id="buttonDelete">Delete</button>
       </div>
 
-      <h2>Edit an existing simulation</h2>
+      <h2>Update an existing simulation</h2>
       <div>
-        <input id=simId value="{{simId::input}}" placeholder="https://localhost:6060"></input>
+        <input id=simId value="{{simId::input}}" placeholder="Simulation ID"></input>
       </div>
       <div>
-        <input id=worldFile value="{{worldFile::input}}" placeholder="cmd line"></input>
+        <input id=cmdLineUpdate value="{{cmd::input}}" placeholder="cmd line"></input>
       </div>
       <div>
-        <button on-tap="tapEdit" id="buttonEdit">Update</button>
+        <button on-tap="_tapUpdate" id="buttonUpdate">Update</button>
       </div>
 
       <h2>Simulation list </h2>
-      <button on-tap="_tapGet" id="buttonGetSimulations">
+      <button on-tap="_tapGetItems" id="buttonGetSimulations">
         Get simulations
       </button>
       <div>
@@ -145,25 +144,28 @@
       Polymer({
         is: 'gz-simulationq',
 
-        // utility that prevents "//" in a url
-        __buildUrl(server, route) {
-          let url = server
-          url += url.endsWith('/')?'':'/'
-          url += route.startsWith('/')?route.substr(1):route
+       createSimulation: function(cmdLine, auto) {
+          this.cmdLine = cmdLine
+          this.auto = auto
+          this._tapCreate()
         },
 
-        createSimulation: function(cmdLine) {
-//        const data = {token: this.token, cmd: this.cmd}
-          const data = {cmd: this.cmd}
+        updateSimulation: function(simId, cmdLine, auto) {
+          this.cmdLine = cmdLine
+          this.auto = auto
+          this._tapUpdate()
+        },
+
+        deleteSimulation: function(simId) {
+          this.simId = simId
+          this._tapDelete()
+        },
+
+        _tapCreate: function(){
+          const data = {cmd: this.cmdLine, auto:this.auto}
           this.$.ajaxCreate.params = data
-//          this.$.ajaxCreate.method = "POST"
-//          this.$.ajaxCreate.url = __buildUrl(this.url, '/simulations')
           this.$.ajaxCreate.headers.authorization = this.token
           this.$.ajaxCreate.generateRequest()
-        },
-
-        _tapCreate: function() {
-          this.createSimulation(this.cmd)
         },
 
         _hresponseCreate: function(req) {
@@ -173,7 +175,13 @@
 
         _herrorCreate: function(err) {
           console.log('gz-simulationq _herrorCreate')
-          this.fire('error', {msg:'error creating new simulation', error: err})
+          const error = err.detail.error
+          this.fire('error', {msg:'error creating new simulation', error: error})
+        },
+
+        _tapUpdate: function() {
+          console.log('_tapUpdate')
+
         },
 
         _hresponseUpdate: function(req) {
@@ -186,6 +194,12 @@
           this.fire('error', {msg:'error updating simulation', error: err})
         },
 
+        _tapDelete: function() {
+          this.$.ajaxDelete.headers.authorization = this.token
+          this.$.ajaxDelete.url = this.url + '/simulations/' + this.simId
+          this.$.ajaxDelete.generateRequest()
+        },
+
         _hresponseDelete: function(req) {
           console.log('gz-simulationq _hresponseDelete')
           this.sim =  this.$.ajaxDelete.lastResponse
@@ -196,11 +210,10 @@
           this.fire('error', {msg:'error deleting simulation', error: err})
         },
 
-        _tapGet: function() {
-          this.$.ajaxItems.url = this.__buildUrl(this.url, '/simulations')
-          const data = { token: this.token}
-          this.$.ajaxItems.params = data;
+        _tapGetItems: function() {
+          this.$.ajaxItems.headers.authorization = this.token
           this.$.ajaxItems.generateRequest()
+
         },
 
         _hresponseItems: function(req) {
@@ -214,7 +227,12 @@
 
         _herrorItems: function(err) {
           console.log('gz-simulationq _herrorItems')
-          this.fire('error', {msg:'error getting simulations', error: err})
+          let msg = 'error getting simulations'
+          if(this.$.ajaxItems.lastError.response) {
+            const o = JSON.parse(this.$.ajaxItems.lastError.response)
+            msg = o.error
+          }
+          this.fire('error', {msg: msg, error: this.$.ajaxItems.lastError})
         },
 
         properties: {
@@ -257,6 +275,14 @@
           cmd: {
             type: String,
             value: '',
+            notify: true
+          },
+
+          // auto simulations are started automatically
+          // when they are first in q and no other sim is running
+          auto: {
+            type: Boolean,
+            value: false,
             notify: true
           },
 
