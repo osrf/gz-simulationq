@@ -20,11 +20,7 @@
       #config > div > input{
         float:right;
       }
-/*
-      #gui > div > input{
-        float:right;
-      }
-*/
+
       #gui  > div {
         padding-top:0.5em;
       }
@@ -61,7 +57,8 @@
 
     <iron-ajax
       id="ajaxUpdate"
-      url=""
+      method='PUT'
+      url=''
       handle-as="json"
       on-response="_hresponseUpdate"
       on-error="_herrorUpdate"
@@ -70,7 +67,7 @@
 
     <iron-ajax
       id="ajaxDelete"
-      url=""
+      url=''
       method="DELETE"
       handle-as="json"
       on-response="_hresponseDelete"
@@ -96,6 +93,11 @@
         <input id=cmdLine value="{{cmd::input}}" placeholder="cmd (command)"></input>
       </div>
       <div>
+        <input type="checkbox" id="auto"
+          checked=
+        >auto</input>
+      </div>
+      <div>
         <button on-tap="_tapCreate"  id="buttonCreate">Create</button>
       </div>
 
@@ -115,6 +117,10 @@
         <input id=cmdLineUpdate value="{{cmd::input}}" placeholder="cmd line"></input>
       </div>
       <div>
+        <input type="checkbox" id=auto checked$={{auto::input}}>auto</input>
+      </div>
+
+      <div>
         <button on-tap="_tapUpdate" id="buttonUpdate">Update</button>
       </div>
 
@@ -132,27 +138,27 @@
 
           </template>
       </div>
-    </div><!-- /gui -->
+    </div> <!-- /gui -->
   </template>
 
   <script>
     (function() {
       'use strict'
 
-// this.fire('notification', {msg: "Request to launch machine has been sent.", type: "msg"})
+      // this.fire('notification', {msg: "Request to launch machine has been sent.", type: "msg"})
 
       Polymer({
         is: 'gz-simulationq',
 
-       createSimulation: function(cmdLine, auto) {
-          this.cmdLine = cmdLine
-          this.auto = auto
+       createSimulation: function(data) {
+          this.cmdLine = data.cmdLine
+          this.auto = data.auto
           this._tapCreate()
         },
 
-        updateSimulation: function(simId, cmdLine, auto) {
-          this.cmdLine = cmdLine
-          this.auto = auto
+        updateSimulation: function(simId, data) {
+          this.cmdLine = data.cmdLine
+          this.auto = data.auto
           this._tapUpdate()
         },
 
@@ -180,8 +186,12 @@
         },
 
         _tapUpdate: function() {
-          console.log('_tapUpdate')
-
+          console.log('_tapUpdate', 'cmd', this.cmdline, 'auto', this.auto )
+          const data = {cmd: this.cmd, auto:this.auto}
+          this.$.ajaxUpdate.params = data
+          this.$.ajaxUpdate.headers.authorization = this.token
+          this.$.ajaxUpdate.url = this.url + '/simulations/' + this.simId
+          this.$.ajaxUpdate.generateRequest()
         },
 
         _hresponseUpdate: function(req) {
@@ -191,7 +201,8 @@
 
         _herrorUpdate: function(err) {
           console.log('gz-simulationq _herrorUpdate')
-          this.fire('error', {msg:'error updating simulation', error: err})
+          const error = err.detail.error
+          this.fire('error', {msg:'error updating simulation', error: error})
         },
 
         _tapDelete: function() {
@@ -213,7 +224,6 @@
         _tapGetItems: function() {
           this.$.ajaxItems.headers.authorization = this.token
           this.$.ajaxItems.generateRequest()
-
         },
 
         _hresponseItems: function(req) {
