@@ -145,10 +145,12 @@
     (function() {
       'use strict'
 
-      // this.fire('notification', {msg: "Request to launch machine has been sent.", type: "msg"})
-
       Polymer({
         is: 'gz-simulationq',
+
+        getSimulations: function() {
+          this._tapGetItems()
+        },
 
        createSimulation: function(data) {
           this.cmdLine = data.cmdLine
@@ -157,6 +159,9 @@
         },
 
         updateSimulation: function(simId, data) {
+          this.simId = simId
+
+          // If these are undefined, the existing value won't be overriden
           this.cmdLine = data.cmdLine
           this.auto = data.auto
           this._tapUpdate()
@@ -182,12 +187,13 @@
         _herrorCreate: function(err) {
           console.log('gz-simulationq _herrorCreate')
           const error = err.detail.error
-          this.fire('error', {msg:'error creating new simulation', error: error})
+          this.fire('error', 'Error creating new simulation: ' + error)
         },
 
         _tapUpdate: function() {
           console.log('_tapUpdate', 'cmd', this.cmdline, 'auto', this.auto )
-          const data = {cmd: this.cmd, auto:this.auto}
+          // TODO: Only override existing fields
+          const data = {cmd: this.cmdLine, auto:this.auto}
           this.$.ajaxUpdate.params = data
           this.$.ajaxUpdate.headers.authorization = this.token
           this.$.ajaxUpdate.url = this.url + '/simulations/' + this.simId
@@ -202,7 +208,7 @@
         _herrorUpdate: function(err) {
           console.log('gz-simulationq _herrorUpdate')
           const error = err.detail.error
-          this.fire('error', {msg:'error updating simulation', error: error})
+          this.fire('error', 'Error updating simulation: ' + error)
         },
 
         _tapDelete: function() {
@@ -218,7 +224,7 @@
 
         _herrorDelete: function(err) {
           console.log('gz-simulationq _herrorDelete')
-          this.fire('error', {msg:'error deleting simulation', error: err})
+          this.fire('error', 'Error deleting simulation: ' + err)
         },
 
         _tapGetItems: function() {
@@ -237,12 +243,12 @@
 
         _herrorItems: function(err) {
           console.log('gz-simulationq _herrorItems')
-          let msg = 'error getting simulations'
+          let msg = 'Error getting simulations'
           if(this.$.ajaxItems.lastError.response) {
             const o = JSON.parse(this.$.ajaxItems.lastError.response)
             msg = o.error
           }
-          this.fire('error', {msg: msg, error: this.$.ajaxItems.lastError})
+          this.fire('error', msg)
         },
 
         properties: {
