@@ -162,8 +162,10 @@
           this.simId = simId
 
           // If these are undefined, the existing value won't be overriden
-          this.cmdLine = data.cmdLine
-          this.auto = data.auto
+          if (data.cmd != undefined)
+            this.cmdLine = data.cmd
+          if (data.auto != undefined)
+            this.auto = data.auto
           this._tapUpdate()
         },
 
@@ -193,7 +195,12 @@
         _tapUpdate: function() {
           console.log('_tapUpdate', 'cmd', this.cmdline, 'auto', this.auto )
           // TODO: Only override existing fields
-          const data = {cmd: this.cmdLine, auto:this.auto}
+          const data = {}
+          if (this.cmdLine != undefined)
+            data.cmd = this.cmdLine
+          if (this.auto != undefined)
+            data.auto = this.auto
+
           this.$.ajaxUpdate.params = data
           this.$.ajaxUpdate.headers.authorization = this.token
           this.$.ajaxUpdate.url = this.url + '/simulations/' + this.simId
@@ -238,7 +245,6 @@
           this.items = []
           if(res.result)
             this.items = res.result
-          console.log(res)
         },
 
         _herrorItems: function(err) {
