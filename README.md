@@ -2,7 +2,9 @@
 
 # \<gz-simulationq\>
 
-[documentation](https://osrf.github.io/gz-simulationq/components/gz-simulationq)
+documentation: [https://osrf.github.io/gz-simulator/components/gz-simulator](https://osrf.github.io/gz-simulator/components/gz-simulationq)
+
+demo: [https://osrf.github.io/gz-simulator/components/gz-simulator/demo](https://osrf.github.io/gz-simulator/components/gz-simulationq/demo)
 
 Manages simulation runs on a CloudSim simulation server
 
