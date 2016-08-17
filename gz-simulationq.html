@@ -207,6 +207,7 @@
 
         _hresponseUpdate: function(req) {
           this.sim = this.$.ajaxUpdate.lastResponse
+          this._tapGetItems()
         },
 
         _herrorUpdate: function(err) {
