@@ -182,18 +182,16 @@
         },
 
         _hresponseCreate: function(req) {
-          console.log('gz-simulationq _hresponseCreate')
           this.sim = this.$.ajaxCreate.lastResponse
+          this._tapGetItems()
         },
 
         _herrorCreate: function(err) {
-          console.log('gz-simulationq _herrorCreate')
-          const error = err.detail.error
-          this.fire('error', 'Error creating new simulation: ' + error)
+          console.error(err)
+          this.fire('error', 'Error creating new simulation at "' + this.url + '"')
         },
 
         _tapUpdate: function() {
-          console.log('_tapUpdate', 'cmd', this.cmdline, 'auto', this.auto )
           // TODO: Only override existing fields
           const data = {}
           if (this.cmdLine != undefined)
@@ -208,14 +206,13 @@
         },
 
         _hresponseUpdate: function(req) {
-          console.log('gz-simulationq _hresponseUpdate')
           this.sim = this.$.ajaxUpdate.lastResponse
+          this._tapGetItems()
         },
 
         _herrorUpdate: function(err) {
-          console.log('gz-simulationq _herrorUpdate')
-          const error = err.detail.error
-          this.fire('error', 'Error updating simulation: ' + error)
+          console.error(err)
+          this.fire('error', 'Error updating simulation at "' + this.url + '"')
         },
 
         _tapDelete: function() {
@@ -225,13 +222,13 @@
         },
 
         _hresponseDelete: function(req) {
-          console.log('gz-simulationq _hresponseDelete')
           this.sim =  this.$.ajaxDelete.lastResponse
+          this._tapGetItems()
         },
 
         _herrorDelete: function(err) {
-          console.log('gz-simulationq _herrorDelete')
-          this.fire('error', 'Error deleting simulation: ' + err)
+          console.error(err)
+          this.fire('error', 'Error deleting simulation at "' + this.url + '"')
         },
 
         _tapGetItems: function() {
@@ -240,7 +237,6 @@
         },
 
         _hresponseItems: function(req) {
-          console.log('gz-simulationq _hresponseItems')
           let res = this.$.ajaxItems.lastResponse
           this.items = []
           if(res.result)
@@ -248,13 +244,8 @@
         },
 
         _herrorItems: function(err) {
-          console.log('gz-simulationq _herrorItems')
-          let msg = 'Error getting simulations'
-          if(this.$.ajaxItems.lastError.response) {
-            const o = JSON.parse(this.$.ajaxItems.lastError.response)
-            msg = o.error
-          }
-          this.fire('error', msg)
+          console.error(err)
+          this.fire('error', 'Error connecting to "' + this.url + '"')
         },
 
         properties: {
