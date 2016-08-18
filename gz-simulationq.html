@@ -182,8 +182,8 @@
         },
 
         _hresponseCreate: function(req) {
-          console.log('gz-simulationq _hresponseCreate')
           this.sim = this.$.ajaxCreate.lastResponse
+          this._tapGetItems()
         },
 
         _herrorCreate: function(err) {
@@ -191,7 +191,6 @@
         },
 
         _tapUpdate: function() {
-          console.log('_tapUpdate', 'cmd', this.cmdline, 'auto', this.auto )
           // TODO: Only override existing fields
           const data = {}
           if (this.cmdLine != undefined)
@@ -206,8 +205,8 @@
         },
 
         _hresponseUpdate: function(req) {
-          console.log('gz-simulationq _hresponseUpdate')
           this.sim = this.$.ajaxUpdate.lastResponse
+          this._tapGetItems()
         },
 
         _herrorUpdate: function(err) {
@@ -221,8 +220,8 @@
         },
 
         _hresponseDelete: function(req) {
-          console.log('gz-simulationq _hresponseDelete')
           this.sim =  this.$.ajaxDelete.lastResponse
+          this._tapGetItems()
         },
 
         _herrorDelete: function(err) {
@@ -235,7 +234,6 @@
         },
 
         _hresponseItems: function(req) {
-          console.log('gz-simulationq _hresponseItems')
           let res = this.$.ajaxItems.lastResponse
           this.items = []
           if(res.result)
