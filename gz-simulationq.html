@@ -187,9 +187,7 @@
         },
 
         _herrorCreate: function(err) {
-          console.log('gz-simulationq _herrorCreate')
-          const error = err.detail.error
-          this.fire('error', 'Error creating new simulation: ' + error)
+          this._errorHelper(this.$.ajaxItems, "Error creating simulation")
         },
 
         _tapUpdate: function() {
@@ -213,9 +211,7 @@
         },
 
         _herrorUpdate: function(err) {
-          console.log('gz-simulationq _herrorUpdate')
-          const error = err.detail.error
-          this.fire('error', 'Error updating simulation: ' + error)
+          this._errorHelper(this.$.ajaxItems, "Error updating simulation")
         },
 
         _tapDelete: function() {
@@ -230,8 +226,7 @@
         },
 
         _herrorDelete: function(err) {
-          console.log('gz-simulationq _herrorDelete')
-          this.fire('error', 'Error deleting simulation: ' + err)
+          this._errorHelper(this.$.ajaxItems, "Error deleting simulation")
         },
 
         _tapGetItems: function() {
@@ -248,12 +243,14 @@
         },
 
         _herrorItems: function(err) {
-          console.log('gz-simulationq _herrorItems')
-          let msg = 'Error getting simulations'
-          if(this.$.ajaxItems.lastError.response) {
-            const o = JSON.parse(this.$.ajaxItems.lastError.response)
-            msg = o.error
+          this._errorHelper(this.$.ajaxItems, "Error getting simulation list")
+        },
+
+        _errorHelper: function(ajax, msg) {
+          if(ajax.lastError.response) {
+            msg += ": " + ajax.lastError.response.error
           }
+          console.error(msg)
           this.fire('error', msg)
         },
 
