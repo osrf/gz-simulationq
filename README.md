@@ -1,5 +1,7 @@
 [ ![Codeship Status for osrf/gz-simulationq](https://codeship.com/projects/4a474a60-2794-0134-e82d-3ecd098fa328/status?branch=master)](https://codeship.com/projects/162319)
 
+[![GitHub version](https://badge.fury.io/gh/osrf%2Fgz-simulationq.svg)](https://badge.fury.io/gh/osrf%2Fgz-simulationq)
+
 # \<gz-simulationq\>
 
 documentation: [https://osrf.github.io/gz-simulationq/components/gz-simulationq](https://osrf.github.io/gz-simulationq/components/gz-simulationq)

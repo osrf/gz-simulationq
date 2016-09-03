@@ -241,7 +241,8 @@
         },
 
         _herrorItems: function(err) {
-          this._errorHelper(this.$.ajaxItems, "Error getting simulation list")
+          // TODO: Find the proper error message
+          this._errorHelper(this.$.ajaxItems, "Could not connect to [" + this.url + "]")
         },
 
         _errorHelper: function(ajax, msg) {
@@ -268,12 +269,6 @@
           title: {
             type: String,
             value: 'gz-simulationq title',
-            notify: true
-          },
-
-          caption: {
-            type: String,
-            value: 'Manage imulations in a cloudsim-sim server.',
             notify: true
           },
 
