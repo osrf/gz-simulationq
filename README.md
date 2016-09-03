@@ -2,6 +2,8 @@
 
 [![GitHub version](https://badge.fury.io/gh/osrf%2Fgz-simulationq.svg)](https://badge.fury.io/gh/osrf%2Fgz-simulationq)
 
+[![Dependency Status](https://www.versioneye.com/user/projects/57ca389a968d640039516e85/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/57ca389a968d640039516e85)
+
 # \<gz-simulationq\>
 
 documentation: [https://osrf.github.io/gz-simulationq/components/gz-simulationq](https://osrf.github.io/gz-simulationq/components/gz-simulationq)
