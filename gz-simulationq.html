@@ -35,10 +35,22 @@
     </style>
 
     <iron-ajax
+      id="ajaxStop"
+      method='GET'
+      url='[[url]]/stopsimulation'
+      handle-as="json"
+      content-type="application/json"
+      on-response="_hresponseStop"
+      on-error="_herrorStop"
+      debounce-duration="300"
+    ></iron-ajax>
+
+    <iron-ajax
       id="ajaxItems"
       method='GET'
       url='[[url]]/simulations'
       handle-as="json"
+      content-type="application/json"
       on-response="_hresponseItems"
       on-error="_herrorItems"
       debounce-duration="300"
@@ -49,6 +61,7 @@
       method='POST'
       url='[[url]]/simulations'
       handle-as='json'
+      content-type="application/json"
       on-response='_hresponseCreate'
       on-error='_herrorCreate'
       debounce-duration="300"
@@ -60,6 +73,7 @@
       method='PUT'
       url=''
       handle-as="json"
+      content-type="application/json"
       on-response="_hresponseUpdate"
       on-error="_herrorUpdate"
       debounce-duration="300">
@@ -67,9 +81,10 @@
 
     <iron-ajax
       id="ajaxDelete"
-      url=''
+      url='[[url]]/simulations/[[simId]]'
       method="DELETE"
       handle-as="json"
+      content-type="application/json"
       on-response="_hresponseDelete"
       on-error="_herrorDelete"
       debounce-duration="300">
@@ -93,8 +108,9 @@
         <input id=cmdLine value="{{cmd::input}}" placeholder="cmd (command)"></input>
       </div>
       <div>
-        <input type="checkbox" id="auto"
-          checked=
+        <input type="checkbox"
+          id="auto"
+          checked$={{auto}}
         >auto</input>
       </div>
       <div>
@@ -117,11 +133,16 @@
         <input id=cmdLineUpdate value="{{cmd::input}}" placeholder="cmd line"></input>
       </div>
       <div>
-        <input type="checkbox" id=auto checked$={{auto::input}}>auto</input>
+        <input type="checkbox" id="auto2" checked$={{auto}}>auto</input>
       </div>
 
       <div>
         <button on-tap="_tapUpdate" id="buttonUpdate">Update</button>
+      </div>
+
+
+      <div>
+        <button on-tap="_tapStop" id="buttonStop">Stop simulator</button>
       </div>
 
       <h2>Simulation list </h2>
@@ -129,14 +150,11 @@
         Get simulations
       </button>
       <div>
-          <h2>Machines</h2>
+          <h2>Simulations</h2>
           <template is="dom-repeat" items="{{items}}">
             <br>-------------------------
-                 <div>id {{item.id}}</div>
-                 <div>cmd {{item.data.cmd}}</div>
-                 <div>perms {{item.permissions}}</div>
-
-          </template>
+                 <div><pre> [[_j(item)]] </pre></div>
+           </template>
       </div>
     </div> <!-- /gui -->
   </template>
@@ -174,9 +192,34 @@
           this._tapDelete()
         },
 
+        // stringify a json data structure
+        _j: function(item) {
+          return JSON.stringify(item, null, 2)
+        },
+
+        _tapStop: function() {
+          this.$.ajaxStop.body = {}
+          this.$.ajaxStop.headers.authorization = this.token
+console.log('TAP STOP 1')
+          this.$.ajaxStop.generateRequest()
+console.log('TAP STOP 2')
+console.log(this.$.ajaxStop.headers.authorization)
+
+        },
+
+        _hresponseStop: function() {
+console.log('_hresponseStop')
+        },
+
+        _herrorStop: function(err) {
+          this._errorHelper(err, "Error stopping simulation")
+        },
+
         _tapCreate: function(){
-          const data = {cmd: this.cmdLine, auto:this.auto}
-          this.$.ajaxCreate.params = data
+          const auto = this.$.auto.checked
+          const data = {cmd: this.cmd, auto:auto}
+          console.log(data)
+          this.$.ajaxCreate.body = data
           this.$.ajaxCreate.headers.authorization = this.token
           this.$.ajaxCreate.generateRequest()
         },
@@ -187,18 +230,17 @@
         },
 
         _herrorCreate: function(err) {
-          this._errorHelper(this.$.ajaxItems, "Error creating simulation")
+          this._errorHelper(err, "Error creating simulation")
         },
 
         _tapUpdate: function() {
-          // TODO: Only override existing fields
           const data = {}
-          if (this.cmdLine != undefined)
-            data.cmd = this.cmdLine
+          if (this.cmd != undefined)
+            data.cmd = this.cmd
           if (this.auto != undefined)
             data.auto = this.auto
 
-          this.$.ajaxUpdate.params = data
+          this.$.ajaxUpdate.body = data
           this.$.ajaxUpdate.headers.authorization = this.token
           this.$.ajaxUpdate.url = this.url + '/simulations/' + this.simId
           this.$.ajaxUpdate.generateRequest()
@@ -210,12 +252,12 @@
         },
 
         _herrorUpdate: function(err) {
-          this._errorHelper(this.$.ajaxItems, "Error updating simulation")
+          this._errorHelper(err, "Error updating simulation")
         },
 
         _tapDelete: function() {
           this.$.ajaxDelete.headers.authorization = this.token
-          this.$.ajaxDelete.url = this.url + '/simulations/' + this.simId
+          this.$.ajaxDelete.body = {}
           this.$.ajaxDelete.generateRequest()
         },
 
@@ -225,7 +267,7 @@
         },
 
         _herrorDelete: function(err) {
-          this._errorHelper(this.$.ajaxItems, "Error deleting simulation")
+          this._errorHelper(err, "Error deleting simulation")
         },
 
         _tapGetItems: function() {
@@ -242,15 +284,50 @@
 
         _herrorItems: function(err) {
           // TODO: Find the proper error message
-          this._errorHelper(this.$.ajaxItems, "Could not connect to [" + this.url + "]")
+          this._errorHelper(err, "Could not connect to [" + this.url + "]")
         },
 
-        _errorHelper: function(ajax, msg) {
-          if(ajax.lastError.response) {
-            msg += ": " + ajax.lastError.response.error
+        _errorHelper: function(err, msg) {
+          let ajax = err.target
+          if(!ajax) {
+            console.error("ajax expected")
+          }
+          else{
+            if(!ajax.lastError) {
+              console.log("no lastError!")
+            }
+            else {
+              if(!ajax.lastError.response) {
+                if (err.detail.error.message) {
+                  msg += ": " + err.detail.error.message
+                }
+                else {
+                  msg += ": no response"
+                }
+              }
+              else {
+                // if there was a response, look for an object
+                // with a message / error / msg attribute
+                const res = ajax.lastError.response
+                try {
+                  const json = typeof (res) === "object"? res: JSON.parse(res)
+                  if(json.error)
+                    msg += ": " + json.error
+                  if(json.msg)
+                    msg += ": " + json.msg
+                  if(json.message)
+                    msg += ": " + json.message
+                }
+                catch(err) {
+                  // the error is not formatted as expected
+                  // add the entire response
+                  msg += ": " + res
+                }
+              }
+            }
           }
           console.error(msg)
-          this.fire('error', msg)
+          this.fire('error', msg,  {bubbles: this.bubbles})
         },
 
         properties: {
