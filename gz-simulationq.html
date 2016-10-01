@@ -110,7 +110,7 @@
       <div>
         <input type="checkbox"
           id="auto"
-          checked$={{auto}}
+          on-click="_autocheck"
         >auto</input>
       </div>
       <div>
@@ -171,7 +171,7 @@
         },
 
        createSimulation: function(data) {
-          this.cmdLine = data.cmdLine
+          this.cmd = data.cmd
           this.auto = data.auto
           this._tapCreate()
         },
@@ -181,7 +181,7 @@
 
           // If these are undefined, the existing value won't be overriden
           if (data.cmd != undefined)
-            this.cmdLine = data.cmd
+            this.cmd = data.cmd
           if (data.auto != undefined)
             this.auto = data.auto
           this._tapUpdate()
@@ -196,19 +196,22 @@
         _j: function(item) {
           return JSON.stringify(item, null, 2)
         },
-
+        _autocheck: function(){
+          this.auto = this.$.auto.checked
+          console.log('auto', this.auto)
+        },
+        kill: function() {
+          this._tapStop()
+        },
         _tapStop: function() {
           this.$.ajaxStop.body = {}
           this.$.ajaxStop.headers.authorization = this.token
-console.log('TAP STOP 1')
           this.$.ajaxStop.generateRequest()
-console.log('TAP STOP 2')
-console.log(this.$.ajaxStop.headers.authorization)
 
         },
 
         _hresponseStop: function() {
-console.log('_hresponseStop')
+          console.log('_hresponseStop')
         },
 
         _herrorStop: function(err) {
@@ -216,8 +219,7 @@ console.log('_hresponseStop')
         },
 
         _tapCreate: function(){
-          const auto = this.$.auto.checked
-          const data = {cmd: this.cmd, auto:auto}
+          const data = {cmd: this.cmd, auto:this.auto}
           console.log(data)
           this.$.ajaxCreate.body = data
           this.$.ajaxCreate.headers.authorization = this.token
@@ -277,13 +279,13 @@ console.log('_hresponseStop')
 
         _hresponseItems: function(req) {
           let res = this.$.ajaxItems.lastResponse
-          this.items = []
           if(res.result)
             this.items = res.result
+          else
+            this.items = []
         },
 
         _herrorItems: function(err) {
-          // TODO: Find the proper error message
           this._errorHelper(err, "Could not connect to [" + this.url + "]")
         },
 
