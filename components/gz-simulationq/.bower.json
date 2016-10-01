@@ -1,0 +1,25 @@
+{
+  "name": "gz-simulationq",
+  "main": "gz-simulationq.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.4.0",
+    "iron-ajax": "polymerelements/iron-ajax#^1.4.3"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+    "web-component-tester": "^4.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "homepage": "https://github.com/osrf/gz-simulationq",
+  "_release": "8022583c81",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "8022583c8115bda5f9f7f7dfd1893315b24134c2"
+  },
+  "_source": "git://github.com/osrf/gz-simulationq.git",
+  "_target": "master",
+  "_originalSource": "osrf/gz-simulationq",
+  "_direct": true
+}

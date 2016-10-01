@@ -1,0 +1,398 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id='gz-simulationq'>
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #config {
+        max-width:40em;
+        font-size:"0.8em"
+      }
+
+      #config > div{
+        padding-top:1em;
+      }
+
+      #config > div > input{
+        float:right;
+      }
+
+      #gui  > div {
+        padding-top:0.5em;
+      }
+
+      th{
+        background-color:#ccc
+      }
+
+      span {
+        @apply(--paper-font-body1);
+      }
+    </style>
+
+    <iron-ajax
+      id="ajaxStop"
+      method='GET'
+      url='[[url]]/stopsimulation'
+      handle-as="json"
+      content-type="application/json"
+      on-response="_hresponseStop"
+      on-error="_herrorStop"
+      debounce-duration="300"
+    ></iron-ajax>
+
+    <iron-ajax
+      id="ajaxItems"
+      method='GET'
+      url='[[url]]/simulations'
+      handle-as="json"
+      content-type="application/json"
+      on-response="_hresponseItems"
+      on-error="_herrorItems"
+      debounce-duration="300"
+    ></iron-ajax>
+
+    <iron-ajax
+      id="ajaxCreate"
+      method='POST'
+      url='[[url]]/simulations'
+      handle-as='json'
+      content-type="application/json"
+      on-response='_hresponseCreate'
+      on-error='_herrorCreate'
+      debounce-duration="300"
+      >
+    </iron-ajax>
+
+    <iron-ajax
+      id="ajaxUpdate"
+      method='PUT'
+      url=''
+      handle-as="json"
+      content-type="application/json"
+      on-response="_hresponseUpdate"
+      on-error="_herrorUpdate"
+      debounce-duration="300">
+    </iron-ajax>
+
+    <iron-ajax
+      id="ajaxDelete"
+      url='[[url]]/simulations/[[simId]]'
+      method="DELETE"
+      handle-as="json"
+      content-type="application/json"
+      on-response="_hresponseDelete"
+      on-error="_herrorDelete"
+      debounce-duration="300">
+    </iron-ajax>
+
+    <div id="config" hidden$=[[!config]]>
+
+
+      <div>
+        Sim server (url):<input id=url value="{{url::input}}" placeholder="Sim server (url)"></input>
+      </div>
+      <div>
+        User (token):<input id=token value="{{token::input}}" placeholder="token"></input>
+      </div>
+     </div> <!-- /config -->
+
+      <div id="gui" hidden$=[[!gui]]>
+
+      <h2>Create a new simulation</h2>
+      <div>
+        <input id=cmdLine value="{{cmd::input}}" placeholder="cmd (command)"></input>
+      </div>
+      <div>
+        <input type="checkbox"
+          id="auto"
+          on-click="_autocheck"
+        >auto</input>
+      </div>
+      <div>
+        <button on-tap="_tapCreate"  id="buttonCreate">Create</button>
+      </div>
+
+      <h2>Delete an existing simulation</h2>
+      <div>
+        <input id=simId value="{{simId::input}}" placeholder="Simulation ID"></input>
+      </div>
+      <div>
+        <button on-tap="_tapDelete" id="buttonDelete">Delete</button>
+      </div>
+
+      <h2>Update an existing simulation</h2>
+      <div>
+        <input id=simId value="{{simId::input}}" placeholder="Simulation ID"></input>
+      </div>
+      <div>
+        <input id=cmdLineUpdate value="{{cmd::input}}" placeholder="cmd line"></input>
+      </div>
+      <div>
+        <input type="checkbox" id="auto2" checked$={{auto}}>auto</input>
+      </div>
+
+      <div>
+        <button on-tap="_tapUpdate" id="buttonUpdate">Update</button>
+      </div>
+
+
+      <div>
+        <button on-tap="_tapStop" id="buttonStop">Stop simulator</button>
+      </div>
+
+      <h2>Simulation list </h2>
+      <button on-tap="_tapGetItems" id="buttonGetSimulations">
+        Get simulations
+      </button>
+      <div>
+          <h2>Simulations</h2>
+          <template is="dom-repeat" items="{{items}}">
+            <br>-------------------------
+                 <div><pre> [[_j(item)]] </pre></div>
+           </template>
+      </div>
+    </div> <!-- /gui -->
+  </template>
+
+  <script>
+    (function() {
+      'use strict'
+
+      Polymer({
+        is: 'gz-simulationq',
+
+        getSimulations: function() {
+          this._tapGetItems()
+        },
+
+       createSimulation: function(data) {
+          this.cmd = data.cmd
+          this.auto = data.auto
+          this._tapCreate()
+        },
+
+        updateSimulation: function(simId, data) {
+          this.simId = simId
+
+          // If these are undefined, the existing value won't be overriden
+          if (data.cmd != undefined)
+            this.cmd = data.cmd
+          if (data.auto != undefined)
+            this.auto = data.auto
+          this._tapUpdate()
+        },
+
+        deleteSimulation: function(simId) {
+          this.simId = simId
+          this._tapDelete()
+        },
+
+        // stringify a json data structure
+        _j: function(item) {
+          return JSON.stringify(item, null, 2)
+        },
+        _autocheck: function(){
+          this.auto = this.$.auto.checked
+          console.log('auto', this.auto)
+        },
+        kill: function() {
+          this._tapStop()
+        },
+        _tapStop: function() {
+          this.$.ajaxStop.body = {}
+          this.$.ajaxStop.headers.authorization = this.token
+          this.$.ajaxStop.generateRequest()
+
+        },
+
+        _hresponseStop: function() {
+          console.log('_hresponseStop')
+        },
+
+        _herrorStop: function(err) {
+          this._errorHelper(err, "Error stopping simulation")
+        },
+
+        _tapCreate: function(){
+          const data = {cmd: this.cmd, auto:this.auto}
+          console.log(data)
+          this.$.ajaxCreate.body = data
+          this.$.ajaxCreate.headers.authorization = this.token
+          this.$.ajaxCreate.generateRequest()
+        },
+
+        _hresponseCreate: function(req) {
+          this.sim = this.$.ajaxCreate.lastResponse
+          this._tapGetItems()
+        },
+
+        _herrorCreate: function(err) {
+          this._errorHelper(err, "Error creating simulation")
+        },
+
+        _tapUpdate: function() {
+          const data = {}
+          if (this.cmd != undefined)
+            data.cmd = this.cmd
+          if (this.auto != undefined)
+            data.auto = this.auto
+
+          this.$.ajaxUpdate.body = data
+          this.$.ajaxUpdate.headers.authorization = this.token
+          this.$.ajaxUpdate.url = this.url + '/simulations/' + this.simId
+          this.$.ajaxUpdate.generateRequest()
+        },
+
+        _hresponseUpdate: function(req) {
+          this.sim = this.$.ajaxUpdate.lastResponse
+          this._tapGetItems()
+        },
+
+        _herrorUpdate: function(err) {
+          this._errorHelper(err, "Error updating simulation")
+        },
+
+        _tapDelete: function() {
+          this.$.ajaxDelete.headers.authorization = this.token
+          this.$.ajaxDelete.body = {}
+          this.$.ajaxDelete.generateRequest()
+        },
+
+        _hresponseDelete: function(req) {
+          this.sim =  this.$.ajaxDelete.lastResponse
+          this._tapGetItems()
+        },
+
+        _herrorDelete: function(err) {
+          this._errorHelper(err, "Error deleting simulation")
+        },
+
+        _tapGetItems: function() {
+          this.$.ajaxItems.headers.authorization = this.token
+          this.$.ajaxItems.generateRequest()
+        },
+
+        _hresponseItems: function(req) {
+          let res = this.$.ajaxItems.lastResponse
+          if(res.result)
+            this.items = res.result
+          else
+            this.items = []
+        },
+
+        _herrorItems: function(err) {
+          this._errorHelper(err, "Could not connect to [" + this.url + "]")
+        },
+
+        _errorHelper: function(err, msg) {
+          let ajax = err.target
+          if(!ajax) {
+            console.error("ajax expected")
+          }
+          else{
+            if(!ajax.lastError) {
+              console.log("no lastError!")
+            }
+            else {
+              if(!ajax.lastError.response) {
+                if (err.detail.error.message) {
+                  msg += ": " + err.detail.error.message
+                }
+                else {
+                  msg += ": no response"
+                }
+              }
+              else {
+                // if there was a response, look for an object
+                // with a message / error / msg attribute
+                const res = ajax.lastError.response
+                try {
+                  const json = typeof (res) === "object"? res: JSON.parse(res)
+                  if(json.error)
+                    msg += ": " + json.error
+                  if(json.msg)
+                    msg += ": " + json.msg
+                  if(json.message)
+                    msg += ": " + json.message
+                }
+                catch(err) {
+                  // the error is not formatted as expected
+                  // add the entire response
+                  msg += ": " + res
+                }
+              }
+            }
+          }
+          console.error(msg)
+          this.fire('error', msg,  {bubbles: this.bubbles})
+        },
+
+        properties: {
+
+          items: {
+            type: Array,
+            notify: true
+          },
+
+          sim: {
+            type: Object,
+            notify: true,
+            value: {}
+          },
+
+          title: {
+            type: String,
+            value: 'gz-simulationq title',
+            notify: true
+          },
+
+          url: {
+            type: String,
+            value: 'https://localhost:4000',
+            notify: true
+          },
+
+          token: {
+            type: String,
+            value: '',
+            notify: true
+          },
+
+          cmd: {
+            type: String,
+            value: '',
+            notify: true
+          },
+
+          // auto simulations are started automatically
+          // when they are first in q and no other sim is running
+          auto: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+
+          gui: {
+            type: Boolean,
+            value: false
+          },
+
+          config: {
+            type: Boolean,
+            value: false
+          }
+        },
+
+        attached: function() {
+          console.log('gz-simulationq attached (id = ' + this.id + ')')
+          this.items = [];
+        }
+      });
+    })();
+  </script>
+</dom-module>
