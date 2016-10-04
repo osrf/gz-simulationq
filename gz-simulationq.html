@@ -158,7 +158,7 @@
       </div>
     </div> <!-- /gui -->
   </template>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.js"></script>
   <script>
     (function() {
       'use strict'
@@ -166,11 +166,18 @@
       Polymer({
         is: 'gz-simulationq',
 
+        attached: function() {
+          console.log('gz-simulationq attached (id = ' + this.id + ')')
+          this.items = []
+          // websocket
+          this.socket = null
+        },
+
         getSimulations: function() {
           this._tapGetItems()
         },
 
-       createSimulation: function(data) {
+        createSimulation: function(data) {
           this.cmd = data.cmd
           this.auto = data.auto
           this._tapCreate()
@@ -196,13 +203,15 @@
         _j: function(item) {
           return JSON.stringify(item, null, 2)
         },
+
         _autocheck: function(){
           this.auto = this.$.auto.checked
-          console.log('auto', this.auto)
         },
+
         kill: function() {
           this._tapStop()
         },
+
         _tapStop: function() {
           this.$.ajaxStop.body = {}
           this.$.ajaxStop.headers.authorization = this.token
@@ -211,7 +220,7 @@
         },
 
         _hresponseStop: function() {
-          console.log('_hresponseStop')
+          console.log('_hresponseStop (simulation received the stop command)')
         },
 
         _herrorStop: function(err) {
@@ -338,6 +347,24 @@
           this.fire('error', msg,  {bubbles: this.bubbles})
         },
 
+        _ontokenChanged: function() {
+          const that = this
+          if(this.socket) {
+            this.socket.disconnect()
+          }
+          // Initialize socket
+          this.socket = io(this.url, {query: {token: that.token}})
+          this.socket.on('connect', function () {
+            console.log("Socket connect")
+            that.socket.on('resource', function (data) {
+                console.log('SOCKET DATA', data)
+                that._tapGetItems();
+            })
+          })
+          this.socket.on('connect_error', function (e) {
+            console.log(e)
+          })
+        },
         properties: {
 
           items: {
@@ -366,7 +393,8 @@
           token: {
             type: String,
             value: '',
-            notify: true
+            notify: true,
+            observer: '_ontokenChanged'
           },
 
           cmd: {
@@ -392,13 +420,8 @@
             type: Boolean,
             value: false
           }
-        },
-
-        attached: function() {
-          console.log('gz-simulationq attached (id = ' + this.id + ')')
-          this.items = [];
         }
-      });
-    })();
+      })
+    })()
   </script>
 </dom-module>
