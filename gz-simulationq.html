@@ -237,7 +237,7 @@
 
         _tapUpdate: function() {
           const data = {}
-          if (this.cmd != undefined)
+          if (this.cmd != undefined && this.cmd != "")
             data.cmd = this.cmd
           if (this.auto != undefined)
             data.auto = this.auto
@@ -273,6 +273,9 @@
         },
 
         _tapGetItems: function() {
+          if (this.$.ajaxItems.url == "")
+            return;
+
           this.$.ajaxItems.headers.authorization = this.token
           this.$.ajaxItems.generateRequest()
         },
@@ -286,7 +289,10 @@
         },
 
         _herrorItems: function(err) {
-          this._errorHelper(err, "Could not connect to [" + this.url + "]")
+          let res = this.$.ajaxItems.lastError
+          console.error(res);
+          // FIXME: bring this back when it's not spamming anymore
+          // this._errorHelper(err, "Could not connect to [" + this.url + "]")
         },
 
         _errorHelper: function(err, msg) {
