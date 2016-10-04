@@ -289,7 +289,10 @@
         },
 
         _herrorItems: function(err) {
-          this._errorHelper(err, "Could not connect to [" + this.url + "]")
+          let res = this.$.ajaxItems.lastError
+          console.error(res);
+          // FIXME: bring this back when it's not spamming anymore
+          // this._errorHelper(err, "Could not connect to [" + this.url + "]")
         },
 
         _errorHelper: function(err, msg) {
