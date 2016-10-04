@@ -351,8 +351,8 @@
           this.socket.on('connect', function () {
             console.log("Socket connect")
             that.socket.on('resource', function (data) {
-                // that.tapGet();
                 console.log('SOCKET DATA', data)
+                that.tapGet();
             })
           })
           this.socket.on('connect_error', function (e) {
